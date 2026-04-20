@@ -1,0 +1,116 @@
+{
+  "schema_version": "2.0",
+  "lock_date": "2026-04-20",
+  "lock_status": "PENDING_MAC_CROSS_VAL",
+  "lock_gate": "Mac re-sweep cfg74 PF >= 1.0 on 2025-2026 every-tick",
+  "instrument": "XAUUSD",
+  "timeframe": "M5",
+  "broker_target": "Vantage Standard STP",
+  "account_size_usd": 1000,
+  "deployment_mode": "two_config_portfolio",
+  "ea_binary": "mql5/GBB_Generic.ex5",
+  "vol_model_onnx": "MQL5/Files/vol_model_6yr.onnx",
+
+  "configs": {
+    "cfg74_quality": {
+      "role": "quality_engine",
+      "magic_number": 20260420,
+      "expected_pf": 1.409,
+      "expected_trades_per_month": 22,
+      "expected_pnl_6yr_usd": 3915,
+      "expected_monthly_return_pct": 5.2,
+      "params": {
+        "EntryMode": 4,
+        "_EntryMode_comment": "fade_long",
+        "VolThreshold": 0.20,
+        "SL_ATR_Mult": 0.3,
+        "TP_ATR_Mult": 2.0,
+        "MaxHoldBars": 12,
+        "BE_ATR_Mult": 0.0,
+        "Trail_ATR_Mult": 0.0,
+        "BracketBars": 0,
+        "SessionStart": 13,
+        "SessionEnd": 20,
+        "RiskPercent": 0.6,
+        "MaxLotSize": 0.10,
+        "DailyLossCapPct": 5.0,
+        "MaxTradesPerDay": 20,
+        "MagicNumber": 20260420
+      }
+    },
+    "cfg28_volume": {
+      "role": "volume_engine",
+      "magic_number": 20260421,
+      "expected_pf": 1.282,
+      "expected_trades_per_month": 51,
+      "expected_pnl_6yr_usd": 6663,
+      "expected_monthly_return_pct": 8.9,
+      "params": {
+        "EntryMode": 4,
+        "_EntryMode_comment": "fade_long",
+        "VolThreshold": 0.10,
+        "SL_ATR_Mult": 0.3,
+        "TP_ATR_Mult": 3.0,
+        "MaxHoldBars": 12,
+        "BE_ATR_Mult": 0.0,
+        "Trail_ATR_Mult": 0.0,
+        "BracketBars": 0,
+        "SessionStart": 13,
+        "SessionEnd": 20,
+        "RiskPercent": 0.6,
+        "MaxLotSize": 0.10,
+        "DailyLossCapPct": 5.0,
+        "MaxTradesPerDay": 50,
+        "MagicNumber": 20260421
+      }
+    }
+  },
+
+  "combined_portfolio_metrics": {
+    "trades_per_month": 73,
+    "weighted_pf_estimate": 1.32,
+    "max_combined_risk_per_trade_pct": 1.2,
+    "_note": "Combined risk = 0.6% per EA when both have positions open simultaneously; in practice this is rare since both fade RSI<35 in same session window, so most trades will overlap and effectively act as 1.2% risk on shared signal"
+  },
+
+  "validation": {
+    "primary": {
+      "machine": "Win",
+      "period": "2020.01.01 - 2026.04.10",
+      "months": 75,
+      "tester_model": 8,
+      "tester_model_name": "Every tick based on real ticks",
+      "spread_points": 18,
+      "results_csv": "results/phase10_mt5_20260420_110306.csv"
+    },
+    "cross_validation": {
+      "machine": "Mac (Wine prefixes)",
+      "period": "2025.01.01 - 2026.04.10",
+      "months": 15,
+      "tester_model": 8,
+      "tester_model_name": "Every tick based on real ticks",
+      "results_csv": "results/phase10_mt5_fade_long_sweep_mac.csv",
+      "status": "RUNNING",
+      "gate": "cfg74 PF >= 1.0 required to lock deploy"
+    }
+  },
+
+  "deploy_checklist": [
+    "Mac cross-validation gate cleared (cfg74 PF >= 1.0 on 2025-2026)",
+    "Vantage Standard STP MT5 logged in on VPS or Win machine",
+    "vol_model_6yr.onnx copied to MQL5/Files/",
+    "GBB_Generic.ex5 copied to MQL5/Experts/GoldFader/",
+    "Two XAUUSD M5 charts open",
+    "EA cfg74 attached to chart 1 with above params",
+    "EA cfg28 attached to chart 2 with above params",
+    "Verify two distinct magic numbers in EA settings (20260420 vs 20260421)",
+    "Enable AutoTrading - both EA icons show smiley face",
+    "Verify first trade executes correctly (lot size + SL/TP)",
+    "Daily monitoring for first 7 days, then weekly"
+  ],
+
+  "rollback_plan": {
+    "trigger": "Combined live DD > 8% in first week OR either EA shows PF < 0.7 over 50+ live trades",
+    "action": "Reduce RiskPercent from 0.6 to 0.3 on both EAs and continue. If still degrading after another 50 trades, disable cfg28 (volume engine) and run cfg74 alone."
+  }
+}
